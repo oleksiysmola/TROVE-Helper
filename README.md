@@ -3,4 +3,5 @@ This is intended to be a tool intended to aid one in the management of TROVE (Th
 
 ## References
  SN Yurchenko, W Thiel, P Jensen; (2007) Theoretical ROVibrational Energies (TROVE): A robust numerical approach to the calculation of rovibrational energies for polyatomic molecules - Journal of Molecular Spectroscopy, https://doi.org/10.1016/j.jms.2007.07.009
+ 
  Furtenbacher, T; Csaszar, AG; Tennyson, J; (2007) MARVEL: measured active rotational-vibrational energy levels. J MOL SPECTROSC , 245 (2) 115 - 125  https://doi.org/10.1016/j.jms.2007.07.005
