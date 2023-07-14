@@ -5,10 +5,10 @@ class EnergyLevels:
         self.EnergyLevelsDataFrame = EnergyLevelsDataFrame
         self.SymmetryMap = SymmetryMap
 
-    def SetLevelsDataFrame(self, EnergyLevelsDataFrame):
+    def SetEnergyLevelsDataFrame(self, EnergyLevelsDataFrame):
         self.EnergyLevelsDataFrame = EnergyLevelsDataFrame
 
-    def GetLevelsDataFrame(self):
+    def GetEnergyLevelsDataFrame(self):
         return self.EnergyLevelsDataFrame
     
     def SetSymmetryMap(self, SymmetryMap):
