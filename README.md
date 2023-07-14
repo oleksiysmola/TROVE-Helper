@@ -1,0 +1,2 @@
+## Trove Helper
+This is intended to be a tool intended to aid one in the management of TROVE (Theoretical Ro-Vibrational Energy Levels) output and matching such results to empirical energy levels from MARVEL (Measured Active Ro-Vibrational Energy Levels). 
