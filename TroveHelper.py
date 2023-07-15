@@ -7,7 +7,6 @@ pandarallel.initialize(progress_bar=True)
 def ReadTroveEnergies(TroveEnergiesFile):
     # Defines variables for regular expression search
     AnyBracketedExpression = r'\([^)]+\)'
-    NumericalBracketedExpression = r'\([^)a-zA-Z;]*\)'
     CharactersToDrop = r"[();]"
     with open(TroveEnergiesFile) as TroveEnergiesToRead:
         TroveEnergies = []
@@ -25,6 +24,11 @@ def ReadTroveEnergies(TroveEnergiesFile):
                                     "J", "Ka", "t", "GammaVibrational"]
     EnergyLevelsDataFrameColumns += VibrationalQuantumNumbers
     EnergyLevelsDataFrame = pd.DataFrame(TroveEnergies, columns=EnergyLevelsDataFrameColumns)
+    EnergyLevelsObject = EnergyLevels(EnergyLevelsDataFrame)
+    return EnergyLevelsObject
+
+def ReadMarvelEnergies(MarvelEnergiesFile):
+    EnergyLevelsDataFrame = pd.read_csv(MarvelEnergiesFile, delim_whitespace=False)
     EnergyLevelsObject = EnergyLevels(EnergyLevelsDataFrame)
     return EnergyLevelsObject
         
