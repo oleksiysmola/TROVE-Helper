@@ -16,3 +16,8 @@ class EnergyLevels:
     
     def GetSymmetryMap(self):
         return self.SymmetryMap
+    
+    def __eq__(self, OtherEnergyLevelsObject):
+        if isinstance(OtherEnergyLevelsObject, EnergyLevels):
+            return self.EnergyLevelsDataFrame.equals(OtherEnergyLevelsObject.EnergyLevelsDataFrame) and self.SymmetryMap == OtherEnergyLevelsObject.SymmetryMap
+        return False
