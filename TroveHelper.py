@@ -28,7 +28,7 @@ def ReadTroveEnergies(TroveEnergiesFile):
     return EnergyLevelsObject
 
 def ReadMarvelEnergies(MarvelEnergiesFile):
-    EnergyLevelsDataFrame = pd.read_csv(MarvelEnergiesFile, delim_whitespace=False)
+    EnergyLevelsDataFrame = pd.read_csv(MarvelEnergiesFile, delim_whitespace=True)
     EnergyLevelsObject = EnergyLevels(EnergyLevelsDataFrame)
     return EnergyLevelsObject
         
