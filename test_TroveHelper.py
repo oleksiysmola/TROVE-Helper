@@ -19,28 +19,35 @@ def SetupFormaldehydeTest():
                         ["B2", "3", "934.866750", "A2",  "3", "0", "1", "B1", "0", "0", "0", "0", "0", "1"]]
     TestEnergyLevelsDataFrame = pd.DataFrame(EnergyLevelsTestInput, columns=EnergyLevelsColumnsFormaldehyde)
     TestEnergyLevelsObject = EnergyLevels(TestEnergyLevelsDataFrame) 
-    MarvelLevelsColumnsFormaldehyde = ["Gamma",	"GammaRot", "J", "Ka", "Kc", "GammaVib", "v1", "v2", "v3", "v4", "v5", "v6", "Tag", "Obs", "Uncertainty", "Source"]
+    MarvelLevelsColumnsFormaldehyde = ["Gamma",	"GammaRot", "J", "Ka", "Kc", "GammaVib", "v1", "v2", "v3", "v4", "v5", "v6", "Tag", "Energy", "Uncertainty", "Source"]
     MarvelLevelsTestInput = [
-        [1, 4, 2, 1, 2, 4, 0, 0, 1, 0, 0, 1, "2-1-2-0-0-1-0-0-1", 2082.71350, 0.0026,  "05LoUlBe"],
         [2, 3, 2, 1, 1, 4, 0, 0, 1, 0, 0, 1, "2-1-1-0-0-1-0-0-1", 2083.32885, 0.0026, "05LoUlBe"],
-        [1, 4, 3, 1, 2, 4, 0, 0, 1, 0, 0, 1, "3-1-2-0-0-1-0-0-1", 2089.59045, 0.0026, "05LoUlBe"]
+        [1, 4, 3, 1, 2, 4, 0, 0, 1, 0, 0, 1, "3-1-2-0-0-1-0-0-1", 2089.59045, 0.0026, "05LoUlBe"],
+        [1, 4, 2, 1, 2, 4, 0, 0, 1, 0, 0, 1, "2-1-2-0-0-1-0-0-1", 2082.71350, 0.0026, "05LoUlBe"]
     ]
     TestMarvelLevelsDataFrame = pd.DataFrame(MarvelLevelsTestInput, columns=MarvelLevelsColumnsFormaldehyde)
     TestMarvelLevelsObject = EnergyLevels(TestMarvelLevelsDataFrame)
-    yield TestEnergyLevelsObject, TestMarvelLevelsObject
+    SortedMarvelLevelsTestInput = [
+        [1, 4, 2, 1, 2, 4, 0, 0, 1, 0, 0, 1, "2-1-2-0-0-1-0-0-1", 2082.71350, 0.0026, "05LoUlBe"],
+        [2, 3, 2, 1, 1, 4, 0, 0, 1, 0, 0, 1, "2-1-1-0-0-1-0-0-1", 2083.32885, 0.0026, "05LoUlBe"],
+        [1, 4, 3, 1, 2, 4, 0, 0, 1, 0, 0, 1, "3-1-2-0-0-1-0-0-1", 2089.59045, 0.0026, "05LoUlBe"]
+    ]
+    TestSortedMarvelLevelsDataFrame = pd.DataFrame(SortedMarvelLevelsTestInput, columns=MarvelLevelsColumnsFormaldehyde)
+    TestSortedMarvelLevelsObject = EnergyLevels(TestSortedMarvelLevelsDataFrame)
+    yield TestEnergyLevelsObject, TestMarvelLevelsObject, TestSortedMarvelLevelsObject
 
 def test_ReadTroveEnergies(SetupFormaldehydeTest):
-    ExpectedEnergyLevelsObject, _ = SetupFormaldehydeTest
+    ExpectedEnergyLevelsObject, _, _ = SetupFormaldehydeTest
     OutputEnergyLevelsObject = ReadTroveEnergies("ReadTroveEnergiesH2CO.test")
     assert OutputEnergyLevelsObject == ExpectedEnergyLevelsObject
 
 def test_ReadMarvelEnergies(SetupFormaldehydeTest):
-    _, ExpectedMarvelLevelsObject = SetupFormaldehydeTest
+    _, ExpectedMarvelLevelsObject, _ = SetupFormaldehydeTest
     OutputMarvelLevelsObject = ReadMarvelEnergies("ReadMarvelEnergies.test")
     assert OutputMarvelLevelsObject == ExpectedMarvelLevelsObject
 
 def test_ObtainSymmetryMap(SetupFormaldehydeTest):
-    TestEnergyLevelsObject, _ = SetupFormaldehydeTest
+    TestEnergyLevelsObject, _, _ = SetupFormaldehydeTest
     ExpectedSymmetryMap = {"A1": 1,
                            "A2": 2,
                            "B1": 3,
@@ -48,5 +55,10 @@ def test_ObtainSymmetryMap(SetupFormaldehydeTest):
     ObtainSymmetryMap(TestEnergyLevelsObject)
     OutputSymmetryMap = TestEnergyLevelsObject.GetSymmetryMap()
     assert OutputSymmetryMap == ExpectedSymmetryMap
+
+def test_SortEnergyLevelsByJAndSymmetry(SetupFormaldehydeTest):
+    _, TestMarvelLevelsObject, ExpectedSortedMarvelLevelsObject = SetupFormaldehydeTest
+    OutputSortedMarvelLevelsObject = SortEnergyLevelsByJAndSymmetry(TestMarvelLevelsObject)
+    assert OutputSortedMarvelLevelsObject == ExpectedSortedMarvelLevelsObject
 
     
