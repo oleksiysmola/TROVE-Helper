@@ -41,6 +41,13 @@ def ObtainSymmetryMap(EnergyLevelsObject):
         SymmetryMap[SymmetriesList[i]] = i + 1 
     EnergyLevelsObject.SetSymmetryMap(SymmetryMap)
 
+def ApplySymmetryMapping(EnergyLevelsObject):
+    EnergyLevelsDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
+    SymmetryMap = EnergyLevelsObject.GetSymmetryMap()
+    EnergyLevelsDataFrame["Gamma"] = EnergyLevelsDataFrame["Gamma"].map(SymmetryMap)
+    EnergyLevelsObject.SetEnergyLevelsDataFrame(EnergyLevelsDataFrame)
+    return EnergyLevelsObject
+
 def SortEnergyLevelsByJAndSymmetry(EnergyLevelsObject):
     EnergyLevelDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
     # Ensuring the types of the parameters we use to sort are numerical rather than string
