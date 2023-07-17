@@ -16,7 +16,16 @@ def SetupFormaldehydeTest():
                         ["B1", "2",  "45.404075", "B1",  "3", "3", "0", "A1", "0", "0", "0", "0", "0", "0"], 
                         ["B2", "1",  "15.869367", "B2",  "3", "1", "1", "A1", "0", "0", "0", "0", "0", "0"], 
                         ["B2", "2",  "45.404265", "B2",  "3", "3", "1", "A1", "0", "0", "0", "0", "0", "0"], 
-                        ["B2", "3", "934.866750", "A2",  "3", "0", "1", "B1", "0", "0", "0", "0", "0", "1"]]
+                        ["B2", "3", "934.866750", "A2",  "3", "0", "1", "B1", "0", "0", "0", "0", "0", "1"],
+                        ["A2", "10", "2047.476778", "B2", "2", "1", "1", "B1", "0", "0", "0", "1", "0", "1"],
+                        ["A2", "11", "2081.682660", "A2", "2", "2", "1", "A1", "0", "0", "1", "0", "0", "0"],
+                        ["A2", "12", "2083.299075", "B1", "2", "1", "0", "B2", "0", "0", "0", "0", "2", "0"],
+                        ["A1", "13", "2079.099006", "B1", "3", "3", "0", "B1", "0", "0", "0", "1", "0", "1"],
+                        ["A1", "14", "2087.522393", "A1", "3", "2", "0", "A1", "0", "0", "1", "0", "0", "0"],
+                        ["A1", "15", "2089.573425", "B2", "3", "1", "1", "B2", "0", "0", "0", "0", "2", "0"],
+                        ["A1", "16", "2081.675216", "A1", "2", "2", "0", "A1", "0", "0", "1", "0", "0", "0"],
+                        ["A1", "17", "2082.696539", "B2", "2", "1", "1", "B2", "0", "0", "0", "0", "2", "0"],
+                        ["A1", "18", "2172.217193", "B2", "2", "1", "1", "B2", "0", "1", "0", "0", "0", "0"]]
     TestEnergyLevelsDataFrame = pd.DataFrame(EnergyLevelsTestInput, columns=EnergyLevelsColumnsFormaldehyde)
     TestEnergyLevelsObject = EnergyLevels(TestEnergyLevelsDataFrame)
     EnergyLevelsSymmetriesMappedTestInput = [[1, "1", "102.330982", "A1", "10", "0", "0", "A1", "0", "0", "0", "0", "0", "0"], 
@@ -28,7 +37,16 @@ def SetupFormaldehydeTest():
                         [3, "2",  "45.404075", "B1",  "3", "3", "0", "A1", "0", "0", "0", "0", "0", "0"], 
                         [4, "1",  "15.869367", "B2",  "3", "1", "1", "A1", "0", "0", "0", "0", "0", "0"], 
                         [4, "2",  "45.404265", "B2",  "3", "3", "1", "A1", "0", "0", "0", "0", "0", "0"], 
-                        [4, "3", "934.866750", "A2",  "3", "0", "1", "B1", "0", "0", "0", "0", "0", "1"]]
+                        [4, "3", "934.866750", "A2",  "3", "0", "1", "B1", "0", "0", "0", "0", "0", "1"],
+                        [2, "10", "2047.476778", "B2", "2", "1", "1", "B1", "0", "0", "0", "1", "0", "1"],
+                        [2, "11", "2081.682660", "A2", "2", "2", "1", "A1", "0", "0", "1", "0", "0", "0"],
+                        [2, "12", "2083.299075", "B1", "2", "1", "0", "B2", "0", "0", "0", "0", "2", "0"],
+                        [1, "13", "2079.099006", "B1", "3", "3", "0", "B1", "0", "0", "0", "1", "0", "1"],
+                        [1, "14", "2087.522393", "A1", "3", "2", "0", "A1", "0", "0", "1", "0", "0", "0"],
+                        [1, "15", "2089.573425", "B2", "3", "1", "1", "B2", "0", "0", "0", "0", "2", "0"],
+                        [1, "16", "2081.675216", "A1", "2", "2", "0", "A1", "0", "0", "1", "0", "0", "0"],
+                        [1, "17", "2082.696539", "B2", "2", "1", "1", "B2", "0", "0", "0", "0", "2", "0"],
+                        [1, "18", "2172.217193", "B2", "2", "1", "1", "B2", "0", "1", "0", "0", "0", "0"]]
     TestEnergyLevelsSymmetriesMappedDataFrame = pd.DataFrame(EnergyLevelsSymmetriesMappedTestInput, columns=EnergyLevelsColumnsFormaldehyde)
     TestEnergyLevelsSymmetriesMappedObject = EnergyLevels(TestEnergyLevelsSymmetriesMappedDataFrame) 
     MarvelLevelsColumnsFormaldehyde = ["Gamma",	"GammaRot", "J", "Ka", "Kc", "GammaVib", "v1", "v2", "v3", "v4", "v5", "v6", "Tag", "Energy", "Uncertainty", "Source"]
@@ -79,9 +97,9 @@ def test_ApplySymmetryMapping(SetupFormaldehydeTest):
     OutputEnergyLevelsObject = ApplySymmetryMapping(TestEnergyLevelsObject)
     assert OutputEnergyLevelsObject == ExpectedEnergyLevelsObject
 
-def test_SortEnergyLevelsByJAndSymmetry(SetupFormaldehydeTest):
+def test_SortEnergyLevelsByJSymmetryAndEnergy(SetupFormaldehydeTest):
     _, _, TestMarvelLevelsObject, ExpectedSortedMarvelLevelsObject = SetupFormaldehydeTest
-    OutputSortedMarvelLevelsObject = SortEnergyLevelsByJAndSymmetry(TestMarvelLevelsObject)
+    OutputSortedMarvelLevelsObject = SortEnergyLevelsByJSymmetryAndEnergy(TestMarvelLevelsObject)
     assert OutputSortedMarvelLevelsObject == ExpectedSortedMarvelLevelsObject
 
     

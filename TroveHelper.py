@@ -48,7 +48,7 @@ def ApplySymmetryMapping(EnergyLevelsObject):
     EnergyLevelsObject.SetEnergyLevelsDataFrame(EnergyLevelsDataFrame)
     return EnergyLevelsObject
 
-def SortEnergyLevelsByJAndSymmetry(EnergyLevelsObject):
+def SortEnergyLevelsByJSymmetryAndEnergy(EnergyLevelsObject):
     EnergyLevelDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
     # Ensuring the types of the parameters we use to sort are numerical rather than string
     EnergyLevelDataFrame["J"] = EnergyLevelDataFrame["J"].astype(int)
@@ -58,3 +58,26 @@ def SortEnergyLevelsByJAndSymmetry(EnergyLevelsObject):
     EnergyLevelDataFrame = EnergyLevelDataFrame.reset_index().drop("index", axis=1)
     EnergyLevelsObject.SetEnergyLevelsDataFrame(EnergyLevelDataFrame)
     return EnergyLevelsObject
+
+def FindMatchingLevels(MarvelEnergyLevelsDataFrame, TroveEnergyLevelsDataFrame):
+    TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["J"] == MarvelEnergyLevelsDataFrame.head(1).squeeze()["J"]]
+    TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["Gamma"] == MarvelEnergyLevelsDataFrame.head(1).squeeze()["Gamma"]]
+    EnergyMatches = {}
+    EnergyMatchedToCountingNumber = {}
+    for MarvelEnergyLevel in MarvelEnergyLevelsDataFrame:
+        TroveEnergyLevelsDataFrame["Obs-Calc"] = abs(MarvelEnergyLevel["Energy"] - TroveEnergyLevelsDataFrame["Energy"])
+        MatchingTroveEnergyLevel = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["Obs-Calc"] == TroveEnergyLevelsDataFrame["Obs-Calc"].min()].squeeze()
+        EnergyMatches[MarvelEnergyLevel["Energy"]] = MatchingTroveEnergyLevel["Energy"]
+        EnergyMatchedToCountingNumber[MarvelEnergyLevel["Energy"]] = MatchingTroveEnergyLevel["N"]
+        TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame.drop("Obs-Calc", axis=1)
+    MarvelEnergyLevelsDataFrame["Calculated"] = MarvelEnergyLevelsDataFrame["Energy"].map(EnergyMatches)
+    MarvelEnergyLevelsDataFrame["N"] = MarvelEnergyLevelsDataFrame["Energy"].map(EnergyMatchedToCountingNumber)
+    return MarvelEnergyLevelsDataFrame
+
+def ApplyFindMatchingLevels(MarvelEnergyLevelsObject, TroveEnergyLevelsObject):
+    MarvelEnergyLevelDataFrame = MarvelEnergyLevelsObject.GetEnergyLevelsDataFrame()
+    TroveEnergyLevelsDataFrame = TroveEnergyLevelsObject.GetEnergyLevelsDataFrame()
+    MarvelEnergyLevelsGroupedByJAndSymmetry = MarvelEnergyLevelDataFrame.groupby(["J", "Gamma"])
+    MarvelEnergyLevelDataFrame = MarvelEnergyLevelsGroupedByJAndSymmetry.parallel_apply(lambda x:FindMatchingLevels(x, TroveEnergyLevelsDataFrame))
+    MarvelEnergyLevelsObject.SetEnergyLevelsDataFrame(MarvelEnergyLevelDataFrame)
+    return MarvelEnergyLevelsObject
