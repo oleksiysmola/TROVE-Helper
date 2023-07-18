@@ -64,6 +64,11 @@ def FindMatchingLevel(MarvelEnergyLevel, TroveEnergyLevelsDataFrame):
     MatchingTroveEnergyLevel = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["Obs-Calc"] == TroveEnergyLevelsDataFrame["Obs-Calc"].min()].squeeze()
     MarvelEnergyLevel["Calculated"] = float(MatchingTroveEnergyLevel["Energy"])
     MarvelEnergyLevel["N"] = int(MatchingTroveEnergyLevel["N"])
+    try:
+        MarvelEnergyLevel["TroveVibrationalTag"] = MatchingTroveEnergyLevel["VibrationalTag"]
+        MarvelEnergyLevel["TroveRoVibrationalTag"] = MatchingTroveEnergyLevel["RoVibrationalTag"]
+    except:
+        print("No, TROVE tags to map")
     return MarvelEnergyLevel
 
 def FindMatchingLevels(MarvelEnergyLevelsDataFrame, TroveEnergyLevelsDataFrame):
@@ -81,16 +86,37 @@ def ApplyFindMatchingLevels(MarvelEnergyLevelsObject, TroveEnergyLevelsObject):
     MarvelEnergyLevelsObject.SetEnergyLevelsDataFrame(MarvelEnergyLevelsDataFrame)
     return MarvelEnergyLevelsObject
 
-def GenerateRoVibrationalTag(EnergyLevelsObject):
+def GenerateRoVibrationalTags(EnergyLevelsObject):
     EnergyLevelsDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
+    EnergyLevelsDataFrame["VibrationalTag"] = EnergyLevelsDataFrame["v1"].astype(str)
     EnergyLevelsDataFrame["RoVibrationalTag"] = EnergyLevelsDataFrame["Ka"].astype(str)
     VibrationalQuantaStillRemaining = True
     VibrationalQuantumNumber = 1
     while VibrationalQuantaStillRemaining:
         try:
             EnergyLevelsDataFrame["RoVibrationalTag"] += "-" + EnergyLevelsDataFrame[f"v{VibrationalQuantumNumber}"].astype(str)
+            EnergyLevelsDataFrame["VibrationalTag"] += "-" + EnergyLevelsDataFrame[f"v{VibrationalQuantumNumber + 1}"].astype(str)
         except KeyError:
             VibrationalQuantaStillRemaining = False
         VibrationalQuantumNumber += 1
     EnergyLevelsObject.SetEnergyLevelsDataFrame(EnergyLevelsDataFrame)
+    return EnergyLevelsObject
+
+def ObtainObsMinusCalc(EnergyLevelsObject):
+    EnergyLevelsDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
+    try:
+        VibrationalBands = EnergyLevelsDataFrame["VibrationalTag"].unique()
+        ObsMinusCalc = {}
+        try:
+            EnergyLevelsDataFrame["Obs-Calc"] = EnergyLevelsDataFrame["Energy"] - EnergyLevelsDataFrame["Calculated"]
+            ObsMinusCalc["Total rms"] = (EnergyLevelsDataFrame["Obs-Calc"]*EnergyLevelsDataFrame["Obs-Calc"]).mean()**0.5
+            for VibrationalBand in VibrationalBands:
+                EnergyLevelsInVibrationalBand = EnergyLevelsDataFrame[EnergyLevelsDataFrame["VibrationalTag"] == VibrationalBand]
+                ObsMinusCalc[VibrationalBand] = (EnergyLevelsInVibrationalBand["Obs-Calc"]*EnergyLevelsInVibrationalBand["Obs-Calc"]).mean()**0.5
+            EnergyLevelsObject.SetEnergyLevelsDataFrame(EnergyLevelsDataFrame)
+            EnergyLevelsObject.SetObsMinusCalc(ObsMinusCalc)
+        except:
+            print("Could not compute Obs-Calc, please ensure MARVEL energy dataframe includes a matched Calculated column")
+    except:
+        print("No vibrational tags in energy levels dataframe, please generate a VibrationalTag column before proceeding")
     return EnergyLevelsObject
