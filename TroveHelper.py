@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import re
 from pandarallel import pandarallel
 from EnergyLevels import EnergyLevels
@@ -119,4 +120,26 @@ def ObtainObsMinusCalc(EnergyLevelsObject):
             print("Could not compute Obs-Calc, please ensure MARVEL energy dataframe includes a matched Calculated column")
     except:
         print("No vibrational tags in energy levels dataframe, please generate a VibrationalTag column before proceeding")
+    return EnergyLevelsObject
+
+def ConvertToTroveRefinementInput(EnergyLevelsObject):
+    EnergyLevelsDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
+    RefinementBlockColumns = ["J", "Gamma", "N", "Energy", "Ka"]
+    VibrationalQuantumNumber = 1
+    DataFrameColumnNames = EnergyLevelsDataFrame.columns
+    while f"v{VibrationalQuantumNumber}" in DataFrameColumnNames:
+        RefinementBlockColumns += [f"v{VibrationalQuantumNumber}"]
+        VibrationalQuantumNumber += 1
+    RefinementBlockColumns += ["Weight"]
+    if "Weight" in DataFrameColumnNames:
+        RefinementBlockColumns += ["Weight"]
+        EnergyLevelsDataFrame = EnergyLevelsDataFrame[RefinementBlockColumns]
+    elif "Uncertainty" and "Transitions" in DataFrameColumnNames:
+        print("No weights columns... generating weights based on transitions and uncertainties")
+        EnergyLevelsDataFrame["Weight"] =  np.log(EnergyLevelsDataFrame["Transitions"]/EnergyLevelsDataFrame["Uncertainty"])
+    else:
+        print("No weights, uncertainties or transitions given... weights shall all be set to equal unity")
+        EnergyLevelsDataFrame["Weight"] = 1.00
+    EnergyLevelsDataFrame = EnergyLevelsDataFrame[RefinementBlockColumns]
+    EnergyLevelsObject.SetEnergyLevelsDataFrame(EnergyLevelsDataFrame)
     return EnergyLevelsObject
