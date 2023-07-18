@@ -79,5 +79,18 @@ def ApplyFindMatchingLevels(MarvelEnergyLevelsObject, TroveEnergyLevelsObject):
     MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsGroupedByJAndSymmetry.parallel_apply(lambda x:FindMatchingLevels(x, TroveEnergyLevelsDataFrame))
     MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame.reset_index(drop=True)
     MarvelEnergyLevelsObject.SetEnergyLevelsDataFrame(MarvelEnergyLevelsDataFrame)
-    print(MarvelEnergyLevelsObject.GetEnergyLevelsDataFrame().to_string())
     return MarvelEnergyLevelsObject
+
+def GenerateRoVibrationalTag(EnergyLevelsObject):
+    EnergyLevelsDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
+    EnergyLevelsDataFrame["RoVibrationalTag"] = EnergyLevelsDataFrame["Ka"].astype(str)
+    VibrationalQuantaStillRemaining = True
+    VibrationalQuantumNumber = 1
+    while VibrationalQuantaStillRemaining:
+        try:
+            EnergyLevelsDataFrame["RoVibrationalTag"] += "-" + EnergyLevelsDataFrame[f"v{VibrationalQuantumNumber}"].astype(str)
+        except KeyError:
+            VibrationalQuantaStillRemaining = False
+        VibrationalQuantumNumber += 1
+    EnergyLevelsObject.SetEnergyLevelsDataFrame(EnergyLevelsDataFrame)
+    return EnergyLevelsObject
