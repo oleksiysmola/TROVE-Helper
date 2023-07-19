@@ -63,7 +63,9 @@ def SortEnergyLevelsByJSymmetryAndEnergy(EnergyLevelsObject):
     EnergyLevelsObject.SetEnergyLevelsDataFrame(EnergyLevelDataFrame)
     return EnergyLevelsObject
 
-def FindMatchingLevel(MarvelEnergyLevel, TroveEnergyLevelsDataFrame):
+def FindMatchingLevel(MarvelEnergyLevel, TroveEnergyLevelsDataFrame, VibrationalTagMap=None):
+    if VibrationalTagMap != None:
+        TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["VibrationalTag"] == VibrationalTagMap[MarvelEnergyLevel["VibrationalTag"]]]
     TroveEnergyLevelsDataFrame["Obs-Calc"] = abs(MarvelEnergyLevel["Energy"] - TroveEnergyLevelsDataFrame["Energy"].astype(float))
     MatchingTroveEnergyLevel = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["Obs-Calc"] == TroveEnergyLevelsDataFrame["Obs-Calc"].min()].squeeze()
     MarvelEnergyLevel["Calculated"] = MatchingTroveEnergyLevel["Energy"]
@@ -75,10 +77,10 @@ def FindMatchingLevel(MarvelEnergyLevel, TroveEnergyLevelsDataFrame):
         print("No, TROVE tags to map")
     return MarvelEnergyLevel
 
-def FindMatchingLevels(MarvelEnergyLevelsDataFrame, TroveEnergyLevelsDataFrame):
+def FindMatchingLevels(MarvelEnergyLevelsDataFrame, TroveEnergyLevelsDataFrame, VibrationalTagMap=None):
     TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["J"] == MarvelEnergyLevelsDataFrame.head(1).squeeze()["J"].astype(str)]
     TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["Gamma"] == MarvelEnergyLevelsDataFrame.head(1).squeeze()["Gamma"].astype(int)]
-    MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame.apply(lambda x:FindMatchingLevel(x, TroveEnergyLevelsDataFrame), axis=1, result_type="expand")
+    MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame.apply(lambda x:FindMatchingLevel(x, TroveEnergyLevelsDataFrame, VibrationalTagMap), axis=1, result_type="expand")
     return MarvelEnergyLevelsDataFrame
 
 def ApplyFindMatchingLevels(MarvelEnergyLevelsObject, TroveEnergyLevelsObject):
@@ -88,7 +90,17 @@ def ApplyFindMatchingLevels(MarvelEnergyLevelsObject, TroveEnergyLevelsObject):
     TroveEnergyLevelsDataFrame = TroveEnergyLevelsObject.GetEnergyLevelsDataFrame()
     TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["Energy"] < MarvelEnergyLevelsDataFrame["Energy"].max() + 10]
     MarvelEnergyLevelsGroupedByJAndSymmetry = MarvelEnergyLevelsDataFrame.groupby(["J", "Gamma"])
-    MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsGroupedByJAndSymmetry.parallel_apply(lambda x:FindMatchingLevels(x, TroveEnergyLevelsDataFrame))
+    try:
+        VibrationalBands = MarvelEnergyLevelsDataFrame["VibrationalTag"].unique()
+        VibrationalTagMap = {}
+        for VibrationalBand in VibrationalBands:
+            LowestEnergyLevelInBand = MarvelEnergyLevelsDataFrame[MarvelEnergyLevelsDataFrame["VibrationalTag"] == VibrationalBand].head(1).squeeze()
+            LowestEnergyLevelInBand = FindMatchingLevel(LowestEnergyLevelInBand, TroveEnergyLevelsDataFrame)
+            VibrationalTagMap[VibrationalBand] = LowestEnergyLevelInBand["TroveVibrationalTag"]
+        MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsGroupedByJAndSymmetry.parallel_apply(lambda x:FindMatchingLevels(x, TroveEnergyLevelsDataFrame, VibrationalTagMap))
+    except: 
+        print("No vibrational tags assigned to Marvel levels, assign tags for more accurate matching!")
+        MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsGroupedByJAndSymmetry.parallel_apply(lambda x:FindMatchingLevels(x, TroveEnergyLevelsDataFrame))
     MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame.drop("Dud", axis=1)
     MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame.reset_index(drop=True)
     MarvelEnergyLevelsObject.SetEnergyLevelsDataFrame(MarvelEnergyLevelsDataFrame)
