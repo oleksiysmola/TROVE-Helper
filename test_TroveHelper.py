@@ -96,20 +96,35 @@ def SetupFormaldehydeTest():
     ]
     TestRefinementBlockDataFrame = pd.DataFrame(RefinementBlockTestInput, columns=RefinementBlockColumnsFormaldehyde)
     TestRefinementBlockObject = EnergyLevels(TestRefinementBlockDataFrame)
-    yield TestEnergyLevelsObject, TestEnergyLevelsSymmetriesMappedObject, TestMarvelLevelsObject, TestSortedMarvelLevelsObject, TestMarvelMatchedLevelsObject,TestTaggedMarvelLevelsObject, MarvelWithObsMinusCalcMatchedLevelsObject, TestRefinementBlockObject
+    MarvelLevelsWithTroveTagsColumnsFormaldehyde = ["Gamma",	"GammaRot", "J", "Ka", "Kc", "GammaVib", "v1", "v2", "v3", "v4", "v5", "v6", "Tag", "Energy", "Uncertainty", "Source", "VibrationalTag", "RoVibrationalTag", "TroveVibrationalTag", "TroveRoVibrationalTag"]
+    MarvelLevelsWithTroveTagsTestInput = [
+        [2, 3, 2, 1, 1, 4, 0, 0, 1, 0, 0, 1, "2-1-1-0-0-1-0-0-1", 2083.32885, 0.0026, "05LoUlBe", "0-0-1-0-0-1", "1-0-0-1-0-0-1", "0-0-0-1-1-0", "1-0-0-0-1-1-0"],
+        [1, 4, 3, 1, 2, 4, 0, 0, 1, 0, 0, 1, "3-1-2-0-0-1-0-0-1", 2089.59045, 0.0026, "05LoUlBe", "0-0-1-0-0-1", "1-0-0-1-0-0-1", "0-0-0-1-1-0", "1-0-0-0-1-1-0"],
+        [1, 4, 2, 1, 2, 4, 0, 0, 1, 0, 0, 1, "2-1-2-0-0-1-0-0-1", 2082.71350, 0.0026, "05LoUlBe", "0-0-1-0-0-1", "1-0-0-1-0-0-1", "0-0-0-1-1-0", "1-0-0-0-1-1-0"]
+    ]
+    TestMarvelLevelsWithTroveTagsDataFrame = pd.DataFrame(MarvelLevelsWithTroveTagsTestInput, columns=MarvelLevelsWithTroveTagsColumnsFormaldehyde)
+    TestMarvelLevelsWithTroveTagsObject = EnergyLevels(TestMarvelLevelsWithTroveTagsDataFrame)
+    MarvelLevelsWithTroveTagsExpectedInput = [
+        [2, 3, 2, 1, 1, 4, 0, 0, 0, 1, 1, 0, "2-1-1-0-0-1-0-0-1", 2083.32885, 0.0026, "05LoUlBe", "0-0-1-0-0-1", "1-0-0-1-0-0-1", "0-0-0-1-1-0", "1-0-0-0-1-1-0"],
+        [1, 4, 3, 1, 2, 4, 0, 0, 0, 1, 1, 0, "3-1-2-0-0-1-0-0-1", 2089.59045, 0.0026, "05LoUlBe", "0-0-1-0-0-1", "1-0-0-1-0-0-1", "0-0-0-1-1-0", "1-0-0-0-1-1-0"],
+        [1, 4, 2, 1, 2, 4, 0, 0, 0, 1, 1, 0, "2-1-2-0-0-1-0-0-1", 2082.71350, 0.0026, "05LoUlBe", "0-0-1-0-0-1", "1-0-0-1-0-0-1", "0-0-0-1-1-0", "1-0-0-0-1-1-0"]
+    ]
+    ExpectedMarvelLevelsWithTroveTagsDataFrame = pd.DataFrame(MarvelLevelsWithTroveTagsExpectedInput, columns=MarvelLevelsWithTroveTagsColumnsFormaldehyde)
+    ExpectedMarvelLevelsWithTroveTagsObject = EnergyLevels(ExpectedMarvelLevelsWithTroveTagsDataFrame)
+    yield TestEnergyLevelsObject, TestEnergyLevelsSymmetriesMappedObject, TestMarvelLevelsObject, TestSortedMarvelLevelsObject, TestMarvelMatchedLevelsObject,TestTaggedMarvelLevelsObject, MarvelWithObsMinusCalcMatchedLevelsObject, TestRefinementBlockObject, TestMarvelLevelsWithTroveTagsObject, ExpectedMarvelLevelsWithTroveTagsObject
 
 def test_ReadTroveEnergies(SetupFormaldehydeTest):
-    ExpectedEnergyLevelsObject, _, _, _, _, _, _, _ = SetupFormaldehydeTest
+    ExpectedEnergyLevelsObject, _, _, _, _, _, _, _, _, _ = SetupFormaldehydeTest
     OutputEnergyLevelsObject = ReadTroveEnergies("ReadTroveEnergiesH2CO.test")
     assert OutputEnergyLevelsObject == ExpectedEnergyLevelsObject
 
 def test_ReadMarvelEnergies(SetupFormaldehydeTest):
-    _, _, ExpectedMarvelLevelsObject, _, _, _, _, _ = SetupFormaldehydeTest
+    _, _, ExpectedMarvelLevelsObject, _, _, _, _, _, _, _ = SetupFormaldehydeTest
     OutputMarvelLevelsObject = ReadMarvelEnergies("ReadMarvelEnergies.test")
     assert OutputMarvelLevelsObject == ExpectedMarvelLevelsObject
 
 def test_ObtainSymmetryMap(SetupFormaldehydeTest):
-    TestEnergyLevelsObject, _,  _, _, _, _, _, _ = SetupFormaldehydeTest
+    TestEnergyLevelsObject, _,  _, _, _, _, _, _, _, _ = SetupFormaldehydeTest
     ExpectedSymmetryMap = {"A1": 1,
                            "A2": 2,
                            "B1": 3,
@@ -119,7 +134,7 @@ def test_ObtainSymmetryMap(SetupFormaldehydeTest):
     assert OutputSymmetryMap == ExpectedSymmetryMap
 
 def test_ApplySymmetryMapping(SetupFormaldehydeTest):
-    TestEnergyLevelsObject, ExpectedEnergyLevelsObject, _, _, _, _, _, _ = SetupFormaldehydeTest
+    TestEnergyLevelsObject, ExpectedEnergyLevelsObject, _, _, _, _, _, _, _, _ = SetupFormaldehydeTest
     TestSymmetryMap = {"A1": 1,
                        "A2": 2,
                        "B1": 3,
@@ -130,22 +145,22 @@ def test_ApplySymmetryMapping(SetupFormaldehydeTest):
     assert OutputEnergyLevelsObject == ExpectedEnergyLevelsObject
 
 def test_SortEnergyLevelsByJSymmetryAndEnergy(SetupFormaldehydeTest):
-    _, _, TestMarvelLevelsObject, ExpectedSortedMarvelLevelsObject, _, _, _, _ = SetupFormaldehydeTest
+    _, _, TestMarvelLevelsObject, ExpectedSortedMarvelLevelsObject, _, _, _, _, _, _ = SetupFormaldehydeTest
     OutputSortedMarvelLevelsObject = SortEnergyLevelsByJSymmetryAndEnergy(TestMarvelLevelsObject)
     assert OutputSortedMarvelLevelsObject == ExpectedSortedMarvelLevelsObject
 
 def test_ApplyFindMatchingLevels(SetupFormaldehydeTest):
-    _, TestTroveLevelsObject, _, TestMarvelLevelsObject, ExpectedMatchingMarvelLevelsObject, _, _, _ = SetupFormaldehydeTest
+    _, TestTroveLevelsObject, _, TestMarvelLevelsObject, ExpectedMatchingMarvelLevelsObject, _, _, _, _, _ = SetupFormaldehydeTest
     OutputMatchingMarvelLevelsObject = ApplyFindMatchingLevels(TestMarvelLevelsObject, TestTroveLevelsObject)
     assert OutputMatchingMarvelLevelsObject == ExpectedMatchingMarvelLevelsObject
 
 def test_GenerateRoVibrationalTags(SetupFormaldehydeTest):
-    _, _, TestMarvelLevelsInputObject, _, _, ExpectedTaggedMarvelLevelsObject, _, _ = SetupFormaldehydeTest
+    _, _, TestMarvelLevelsInputObject, _, _, ExpectedTaggedMarvelLevelsObject, _, _, _, _ = SetupFormaldehydeTest
     OutputTaggedMarvelLevelsObject = GenerateRoVibrationalTags(TestMarvelLevelsInputObject)
     assert OutputTaggedMarvelLevelsObject == ExpectedTaggedMarvelLevelsObject
 
 def test_ObtainObsMinusCalc(SetupFormaldehydeTest):
-    _, _, _, _, _, _, ExpectedMarvelWithObsMinusCalcEnergyLevelsObject, _ = SetupFormaldehydeTest
+    _, _, _, _, _, _, ExpectedMarvelWithObsMinusCalcEnergyLevelsObject, _, _, _ = SetupFormaldehydeTest
     ExpectedObsMinusCalc = {"Total rms": 0.02209130123672688, "0-0-1-0-0-1": 0.02209130123672688}
     ExpectedMarvelWithObsMinusCalcEnergyLevelsObject.SetObsMinusCalc(ExpectedObsMinusCalc)
     InputTaggedMarvelEnergyLevelsObject = EnergyLevels(ExpectedMarvelWithObsMinusCalcEnergyLevelsObject.GetEnergyLevelsDataFrame().drop("Obs-Calc", axis=1))
@@ -153,6 +168,11 @@ def test_ObtainObsMinusCalc(SetupFormaldehydeTest):
     assert OutputMarvelWithObsMinusCalcEnergyLevelsObject.GetEnergyLevelsDataFrame().to_string() == ExpectedMarvelWithObsMinusCalcEnergyLevelsObject.GetEnergyLevelsDataFrame().to_string() and OutputMarvelWithObsMinusCalcEnergyLevelsObject.GetObsMinusCalc() == ExpectedMarvelWithObsMinusCalcEnergyLevelsObject.GetObsMinusCalc()
 
 def test_ConvertToTroveRefinementInput(SetupFormaldehydeTest):
-    _, _, _, _, _, _, InputMarvelWithObsMinusCalcEnergyLevelsObject, ExpectedRefinementBlockObject = SetupFormaldehydeTest
+    _, _, _, _, _, _, InputMarvelWithObsMinusCalcEnergyLevelsObject, ExpectedRefinementBlockObject, _, _ = SetupFormaldehydeTest
     OutputRefinementBlockObject = ConvertToTroveRefinementInput(InputMarvelWithObsMinusCalcEnergyLevelsObject)
     assert OutputRefinementBlockObject == ExpectedRefinementBlockObject
+
+def test_ApplyReplaceWithTroveQuantumNumbers(SetupFormaldehydeTest):
+    _, _, _, _, _, _, _, _, InputMarvelEnergyLevelsObject, ExpectedMarvelEnergyLevelsObject = SetupFormaldehydeTest
+    OutputMarvelEnergyLevelsObject = ApplyReplaceWithTroveQuantumNumbers(InputMarvelEnergyLevelsObject)
+    assert OutputMarvelEnergyLevelsObject == ExpectedMarvelEnergyLevelsObject

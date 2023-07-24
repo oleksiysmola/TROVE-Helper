@@ -9,8 +9,8 @@ if __name__ == "__main__":
     else:
         MarvelEnergiesFile = sys.argv[1]
         TroveEnergiesFile = sys.argv[2]
-        OutputFileName = MarvelEnergiesFile.split(".")[0] + ".results"
-        RefinementFileName = MarvelEnergiesFile.split(".")[0] + ".refine"
+        OutputFileName = TroveEnergiesFile.split(".")[0] + ".results"
+        RefinementFileName = TroveEnergiesFile.split(".")[0] + ".refine"
         MarvelEnergyLevelsObject = ReadMarvelEnergies(MarvelEnergiesFile)
         TroveEnergyLevelsObject = ReadTroveEnergies(TroveEnergiesFile)
         TroveEnergyLevelsObject = ObtainSymmetryMap(TroveEnergyLevelsObject)
@@ -21,6 +21,7 @@ if __name__ == "__main__":
         MarvelEnergyLevelsObject = ApplyFindMatchingLevels(MarvelEnergyLevelsObject, TroveEnergyLevelsObject)
         MarvelEnergyLevelsObject = ObtainObsMinusCalc(MarvelEnergyLevelsObject)
         WriteToFile(MarvelEnergyLevelsObject, OutputFileName)
+        MarvelEnergyLevelsObject = ApplyReplaceWithTroveQuantumNumbers(MarvelEnergyLevelsObject)
         RefinementEnergyLevelsObject = ConvertToTroveRefinementInput(MarvelEnergyLevelsObject)
         RefinementEnergyLevelsObject.SetObsMinusCalc(None)
         WriteToFile(RefinementEnergyLevelsObject, RefinementFileName)
