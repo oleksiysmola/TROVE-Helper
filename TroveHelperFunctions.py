@@ -64,7 +64,7 @@ def SortEnergyLevelsByJSymmetryAndEnergy(EnergyLevelsObject):
     return EnergyLevelsObject
 
 def FindMatchingLevel(MarvelEnergyLevel, TroveEnergyLevelsDataFrame, VibrationalTagMap=None):
-    if VibrationalTagMap != None:
+    if VibrationalTagMap != None:      
         TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["VibrationalTag"] == VibrationalTagMap[MarvelEnergyLevel["VibrationalTag"]]]
     else:
         TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["J"] == str(MarvelEnergyLevel["J"])]
@@ -104,7 +104,7 @@ def ApplyFindMatchingLevels(MarvelEnergyLevelsObject, TroveEnergyLevelsObject):
         MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsGroupedByJAndSymmetry.parallel_apply(lambda x:FindMatchingLevels(x, TroveEnergyLevelsDataFrame, VibrationalTagMap))
     except:
         print("No vibrational tags assigned to Marvel levels, assign tags for more accurate matching!")
-    MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsGroupedByJAndSymmetry.parallel_apply(lambda x:FindMatchingLevels(x, TroveEnergyLevelsDataFrame))
+        MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsGroupedByJAndSymmetry.parallel_apply(lambda x:FindMatchingLevels(x, TroveEnergyLevelsDataFrame))
     MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame.drop("Dud", axis=1)
     MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame.reset_index(drop=True)
     MarvelEnergyLevelsObject.SetEnergyLevelsDataFrame(MarvelEnergyLevelsDataFrame)
@@ -166,14 +166,23 @@ def ConvertToTroveRefinementInput(EnergyLevelsObject):
     EnergyLevelsObject.SetEnergyLevelsDataFrame(EnergyLevelsDataFrame)
     return EnergyLevelsObject
 
-def WriteToFile(EnergyLevelsObject, FileName):
+def WriteToFile(EnergyLevelsObject, FileName, OutlierThreshold=5):
     EnergyLevelsDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
+    if "Obs-Calc" in EnergyLevelsDataFrame.columns:
+        EnergyLevelsOutlierDataFame = EnergyLevelsDataFrame[abs(EnergyLevelsDataFrame["Obs-Calc"]) > OutlierThreshold]
+        EnergyLevelsOutlierDataFameToString = EnergyLevelsOutlierDataFame.to_string(index=False, header=False)
     EnergyLevelObsMinusCalc = EnergyLevelsObject.GetObsMinusCalc()
     EnergyLevelsDataFrameToString =  EnergyLevelsDataFrame.to_string(index=False)
     with open(FileName, "w+") as EnergyLevelsFile:
         EnergyLevelsFile.write(EnergyLevelsDataFrameToString)
         if EnergyLevelObsMinusCalc != None:
             EnergyLevelsFile.write("\n" + str(EnergyLevelObsMinusCalc))
+        try:
+            EnergyLevelsFile.write("\n\n\n" + "Please check assignments, the following outliers have been identified:\n")
+            EnergyLevelsFile.write(EnergyLevelsOutlierDataFameToString)
+            EnergyLevelsFile.write("\n\n" + "End of output!")
+        except:
+            EnergyLevelsFile.write("\n\n" + "End of output!")
 
 def ReplaceWithTroveQuantumNumbers(EnergyLevel):
     TroveQuantumNumbers = EnergyLevel["TroveVibrationalTag"].split("-")
