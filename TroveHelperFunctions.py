@@ -173,9 +173,17 @@ def WriteToFile(EnergyLevelsObject, FileName, OutlierThreshold=5):
         EnergyLevelsOutlierDataFame = EnergyLevelsDataFrame[abs(EnergyLevelsDataFrame["Obs-Calc"]) > OutlierThreshold]
         EnergyLevelsOutlierDataFameToString = EnergyLevelsOutlierDataFame.to_string(index=False, header=False)
     EnergyLevelObsMinusCalc = EnergyLevelsObject.GetObsMinusCalc()
-    EnergyLevelsDataFrameToString =  EnergyLevelsDataFrame.to_string(index=False)
     with open(FileName, "w+") as EnergyLevelsFile:
-        EnergyLevelsFile.write(EnergyLevelsDataFrameToString)
+        try: 
+            VibrationalBands = EnergyLevelsDataFrame["VibrationalTag"].unique()
+            for VibrationalBand in VibrationalBands:
+                EnergyLevelsInVibrationalBand = EnergyLevelsDataFrame[EnergyLevelsDataFrame["VibrationalTag"] == VibrationalBand]
+                EnergyLevelsDataFrameToString =  EnergyLevelsInVibrationalBand.to_string(index=False)
+                EnergyLevelsFile.write(EnergyLevelsDataFrameToString)
+                EnergyLevelsFile.write("\n")
+        except:
+            EnergyLevelsDataFrameToString = EnergyLevelsDataFrame.to_string(index=False)
+            EnergyLevelsFile.write(EnergyLevelsDataFrameToString)
         if EnergyLevelObsMinusCalc != None:
             EnergyLevelsFile.write("\n" + str(EnergyLevelObsMinusCalc))
         try:
