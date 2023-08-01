@@ -88,6 +88,7 @@ def FindMatchingLevels(MarvelEnergyLevelsDataFrame, TroveEnergyLevelsDataFrame, 
 
 def ApplyFindMatchingLevels(MarvelEnergyLevelsObject, TroveEnergyLevelsObject):
     MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsObject.GetEnergyLevelsDataFrame()
+    MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame[MarvelEnergyLevelsDataFrame["Energy"] > 0]
     # Temporary dummy column so apply doesn't change all the dtypes into floats!
     MarvelEnergyLevelsDataFrame["Dud"] = "s"
     TroveEnergyLevelsDataFrame = TroveEnergyLevelsObject.GetEnergyLevelsDataFrame()
