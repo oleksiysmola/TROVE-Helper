@@ -1,5 +1,6 @@
 from TroveHelperFunctions import *
 from EnergyLevels import EnergyLevels
+import copy
 import sys
 
 
@@ -11,6 +12,7 @@ if __name__ == "__main__":
         TroveEnergiesFile = sys.argv[2]
         OutputFileName = TroveEnergiesFile.split(".")[0] + ".results"
         RefinementFileName = TroveEnergiesFile.split(".")[0] + ".refine"
+        GainMarvelFileName = TroveEnergiesFile.split(".")[0] + ".gain"
         MarvelEnergyLevelsObject = ReadMarvelEnergies(MarvelEnergiesFile)
         TroveEnergyLevelsObject = ReadTroveEnergies(TroveEnergiesFile)
         TroveEnergyLevelsObject = ObtainSymmetryMap(TroveEnergyLevelsObject)
@@ -22,6 +24,9 @@ if __name__ == "__main__":
         MarvelEnergyLevelsObject = ObtainObsMinusCalc(MarvelEnergyLevelsObject)
         WriteToFile(MarvelEnergyLevelsObject, OutputFileName)
         MarvelEnergyLevelsObject = ApplyReplaceWithTroveQuantumNumbers(MarvelEnergyLevelsObject)
-        RefinementEnergyLevelsObject = ConvertToTroveRefinementInput(MarvelEnergyLevelsObject)
+        RefinementEnergyLevelsObject = ConvertToTroveRefinementInput(copy.deepcopy(MarvelEnergyLevelsObject))
         RefinementEnergyLevelsObject.SetObsMinusCalc(None)
         WriteToFile(RefinementEnergyLevelsObject, RefinementFileName)
+        GainMarvelEnergyLevelsObject = ConvertToMarvelStatesFormat(copy.deepcopy(MarvelEnergyLevelsObject))
+        GainMarvelEnergyLevelsObject.SetObsMinusCalc(None)
+        WriteToFile(GainMarvelEnergyLevelsObject, GainMarvelFileName)

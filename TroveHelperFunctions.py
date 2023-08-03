@@ -88,7 +88,7 @@ def FindMatchingLevels(MarvelEnergyLevelsDataFrame, TroveEnergyLevelsDataFrame, 
 
 def ApplyFindMatchingLevels(MarvelEnergyLevelsObject, TroveEnergyLevelsObject):
     MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsObject.GetEnergyLevelsDataFrame()
-    MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame[MarvelEnergyLevelsDataFrame["Energy"] > 0]
+    MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame[MarvelEnergyLevelsDataFrame["Energy"] >= 0]
     # Temporary dummy column so apply doesn't change all the dtypes into floats!
     MarvelEnergyLevelsDataFrame["Dud"] = "s"
     TroveEnergyLevelsDataFrame = TroveEnergyLevelsObject.GetEnergyLevelsDataFrame()
@@ -192,6 +192,13 @@ def WriteToFile(EnergyLevelsObject, FileName, OutlierThreshold=5):
             EnergyLevelsFile.write("\n\n" + "End of output!")
         except:
             EnergyLevelsFile.write("\n\n" + "End of output!")
+
+def ConvertToMarvelStatesFormat(EnergyLevelsObject):
+    # Converts energies to form needed to convert from the GAIN to ExoMol format
+    EnergyLevelsDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
+    EnergyLevelsDataFrame = EnergyLevelsDataFrame[["J", "Gamma", "N", "Energy", "Uncertainty"]]
+    EnergyLevelsObject.SetEnergyLevelsDataFrame(EnergyLevelsDataFrame)
+    return EnergyLevelsObject
 
 def ReplaceWithTroveQuantumNumbers(EnergyLevel):
     TroveQuantumNumbers = EnergyLevel["TroveVibrationalTag"].split("-")
