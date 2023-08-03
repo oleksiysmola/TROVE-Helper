@@ -22,6 +22,7 @@ if __name__ == "__main__":
         MarvelEnergyLevelsObject = GenerateRoVibrationalTags(MarvelEnergyLevelsObject)
         MarvelEnergyLevelsObject = ApplyFindMatchingLevels(MarvelEnergyLevelsObject, TroveEnergyLevelsObject)
         MarvelEnergyLevelsObject = ObtainObsMinusCalc(MarvelEnergyLevelsObject)
+        MarvelEnergyLevelsObject = RaiseWeights(MarvelEnergyLevelsObject)
         WriteToFile(MarvelEnergyLevelsObject, OutputFileName)
         MarvelEnergyLevelsObject = ApplyReplaceWithTroveQuantumNumbers(MarvelEnergyLevelsObject)
         RefinementEnergyLevelsObject = ConvertToTroveRefinementInput(copy.deepcopy(MarvelEnergyLevelsObject))

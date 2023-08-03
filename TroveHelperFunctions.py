@@ -146,6 +146,31 @@ def ObtainObsMinusCalc(EnergyLevelsObject):
         print("No vibrational tags in energy levels dataframe, please generate a VibrationalTag column before proceeding")
     return EnergyLevelsObject
 
+def RaiseWeightOfBand(MarvelEnergyLevel, ScaleFactor=10, VibrationalBand=None):
+    DataFrameColumns = MarvelEnergyLevel.index
+    TotalVibrationalQuanta = 0
+    if VibrationalBand == None:
+        VibrationalQuantumNumber = 1
+        while f"v{VibrationalQuantumNumber}" in DataFrameColumns:
+            TotalVibrationalQuanta += int(MarvelEnergyLevel[f"v{VibrationalQuantumNumber}"])
+            VibrationalQuantumNumber += 1
+        if TotalVibrationalQuanta == 0:
+            MarvelEnergyLevel["Weight"] *= ScaleFactor
+    else:
+        try:
+            if MarvelEnergyLevel["VibrationalTag"] == VibrationalBand:
+                MarvelEnergyLevel["Weight"] *= ScaleFactor
+        except:
+            print("Levels have not been tagged!")
+    return MarvelEnergyLevel
+    
+def RaiseWeights(EnergyLevelsObject):
+    EnergyLevelsDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
+    if "Weight" in EnergyLevelsDataFrame.columns:
+        EnergyLevelsDataFrame = EnergyLevelsDataFrame.parallel_apply(lambda x: RaiseWeightOfBand(x), axis=1, result_type="expand")
+        EnergyLevelsObject.SetEnergyLevelsDataFrame(EnergyLevelsDataFrame)
+    return EnergyLevelsObject
+
 def ConvertToTroveRefinementInput(EnergyLevelsObject):
     EnergyLevelsDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
     RefinementBlockColumns = ["J", "Gamma", "N", "Energy", "Ka"]
@@ -178,6 +203,7 @@ def WriteToFile(EnergyLevelsObject, FileName, OutlierThreshold=5):
             VibrationalBands = EnergyLevelsDataFrame["VibrationalTag"].unique()
             for VibrationalBand in VibrationalBands:
                 EnergyLevelsInVibrationalBand = EnergyLevelsDataFrame[EnergyLevelsDataFrame["VibrationalTag"] == VibrationalBand]
+                EnergyLevelsInVibrationalBand = EnergyLevelsInVibrationalBand.sort_values(by=["J", "Ka", "Energy"])
                 EnergyLevelsDataFrameToString =  EnergyLevelsInVibrationalBand.to_string(index=False)
                 EnergyLevelsFile.write(EnergyLevelsDataFrameToString)
                 EnergyLevelsFile.write("\n")
