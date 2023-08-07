@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from collections import Counter
 import re
 from pandarallel import pandarallel
 from EnergyLevels import EnergyLevels
@@ -27,6 +28,8 @@ def ReadTroveEnergies(TroveEnergiesFile):
     EnergyLevelsDataFrame = pd.DataFrame(TroveEnergies, columns=EnergyLevelsDataFrameColumns)
     EnergyLevelsDataFrame["Energy"] = EnergyLevelsDataFrame["Energy"].astype(float)
     EnergyLevelsDataFrame["N"] = EnergyLevelsDataFrame["N"].astype(int)
+    EnergyLevelsDataFrame["J"] = EnergyLevelsDataFrame["J"].astype(int)
+    EnergyLevelsDataFrame["Ka"] = EnergyLevelsDataFrame["Ka"].astype(int)
     EnergyLevelsObject = EnergyLevels(EnergyLevelsDataFrame)
     return EnergyLevelsObject
 
@@ -67,7 +70,7 @@ def FindMatchingLevel(MarvelEnergyLevel, TroveEnergyLevelsDataFrame, Vibrational
     if VibrationalTagMap != None:      
         TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["VibrationalTag"] == VibrationalTagMap[MarvelEnergyLevel["VibrationalTag"]]]
     else:
-        TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["J"] == str(MarvelEnergyLevel["J"])]
+        TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["J"] == MarvelEnergyLevel["J"]]
         TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["Gamma"] == int(MarvelEnergyLevel["Gamma"])]
     TroveEnergyLevelsDataFrame["Obs-Calc"] = abs(MarvelEnergyLevel["Energy"] - TroveEnergyLevelsDataFrame["Energy"].astype(float))
     MatchingTroveEnergyLevel = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["Obs-Calc"] == TroveEnergyLevelsDataFrame["Obs-Calc"].min()].squeeze()
@@ -81,7 +84,7 @@ def FindMatchingLevel(MarvelEnergyLevel, TroveEnergyLevelsDataFrame, Vibrational
     return MarvelEnergyLevel
 
 def FindMatchingLevels(MarvelEnergyLevelsDataFrame, TroveEnergyLevelsDataFrame, VibrationalTagMap=None):
-    TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["J"] == str(MarvelEnergyLevelsDataFrame.head(1).squeeze()["J"])]
+    TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["J"] == MarvelEnergyLevelsDataFrame.head(1).squeeze()["J"]]
     TroveEnergyLevelsDataFrame = TroveEnergyLevelsDataFrame[TroveEnergyLevelsDataFrame["Gamma"] == int(MarvelEnergyLevelsDataFrame.head(1).squeeze()["Gamma"])]
     MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame.apply(lambda x:FindMatchingLevel(x, TroveEnergyLevelsDataFrame, VibrationalTagMap), axis=1, result_type="expand")
     return MarvelEnergyLevelsDataFrame
@@ -96,25 +99,29 @@ def ApplyFindMatchingLevels(MarvelEnergyLevelsObject, TroveEnergyLevelsObject):
     MarvelEnergyLevelsGroupedByJAndSymmetry = MarvelEnergyLevelsDataFrame.groupby(["J", "Gamma"])
     try:
         TroveEnergyLevelsDataFrameCopy = TroveEnergyLevelsDataFrame.copy()
-        VibrationalBands = MarvelEnergyLevelsDataFrame["VibrationalTag"].unique()
+        VibrationalBands = MarvelEnergyLevelsDataFrame.sort_values(by="Energy")["VibrationalTag"].unique()
         VibrationalTagMap = {}
         for VibrationalBand in VibrationalBands:
             LowestEnergyLevelInBand = MarvelEnergyLevelsDataFrame[MarvelEnergyLevelsDataFrame["VibrationalTag"] == VibrationalBand].head(1).squeeze()
             LowestEnergyLevelInBand = FindMatchingLevel(LowestEnergyLevelInBand, TroveEnergyLevelsDataFrameCopy)
             VibrationalTagMap[VibrationalBand] = LowestEnergyLevelInBand["TroveVibrationalTag"]
         MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsGroupedByJAndSymmetry.parallel_apply(lambda x:FindMatchingLevels(x, TroveEnergyLevelsDataFrame, VibrationalTagMap))
+        MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame.drop("Dud", axis=1)
+        MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame.reset_index(drop=True)
+        MarvelEnergyLevelsObject.SetEnergyLevelsDataFrame(MarvelEnergyLevelsDataFrame)
+        return MarvelEnergyLevelsObject, VibrationalTagMap        
     except:
         print("No vibrational tags assigned to Marvel levels, assign tags for more accurate matching!")
         MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsGroupedByJAndSymmetry.parallel_apply(lambda x:FindMatchingLevels(x, TroveEnergyLevelsDataFrame))
-    MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame.drop("Dud", axis=1)
-    MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame.reset_index(drop=True)
-    MarvelEnergyLevelsObject.SetEnergyLevelsDataFrame(MarvelEnergyLevelsDataFrame)
-    return MarvelEnergyLevelsObject
+        MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame.drop("Dud", axis=1)
+        MarvelEnergyLevelsDataFrame = MarvelEnergyLevelsDataFrame.reset_index(drop=True)
+        MarvelEnergyLevelsObject.SetEnergyLevelsDataFrame(MarvelEnergyLevelsDataFrame)
+        return MarvelEnergyLevelsObject
 
 def GenerateRoVibrationalTags(EnergyLevelsObject):
     EnergyLevelsDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
     EnergyLevelsDataFrame["VibrationalTag"] = EnergyLevelsDataFrame["v1"].astype(str)
-    EnergyLevelsDataFrame["RoVibrationalTag"] = EnergyLevelsDataFrame["Ka"].astype(str)
+    EnergyLevelsDataFrame["RoVibrationalTag"] = EnergyLevelsDataFrame["Gamma"].astype(str) + "-" + EnergyLevelsDataFrame["J"].astype(str) + "-" + EnergyLevelsDataFrame["Ka"].astype(str)
     VibrationalQuantaStillRemaining = True
     VibrationalQuantumNumber = 1
     while VibrationalQuantaStillRemaining:
@@ -226,14 +233,42 @@ def ConvertToMarvelStatesFormat(EnergyLevelsObject):
     EnergyLevelsObject.SetEnergyLevelsDataFrame(EnergyLevelsDataFrame)
     return EnergyLevelsObject
 
-def ReplaceWithTroveQuantumNumbers(EnergyLevel):
-    TroveQuantumNumbers = EnergyLevel["TroveVibrationalTag"].split("-")
-    for i in range(len(TroveQuantumNumbers)):
-        EnergyLevel[f"v{i + 1}"] = int(TroveQuantumNumbers[i])
+def ReplaceWithQuantumNumbersFromTag(EnergyLevel):
+    try: 
+        QuantumNumbers = EnergyLevel["TroveVibrationalTag"].split("-")
+    except:
+        QuantumNumbers = EnergyLevel["VibrationalTag"].split("-")
+    for i in range(len(QuantumNumbers)):
+        EnergyLevel[f"v{i + 1}"] = int(QuantumNumbers[i])
     return EnergyLevel
 
-def ApplyReplaceWithTroveQuantumNumbers(EnergyLevelsObject):
+def ApplyReplaceWithQuantumNumbersFromTag(EnergyLevelsObject):
     EnergyLevelsDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
-    EnergyLevelsDataFrame = EnergyLevelsDataFrame.parallel_apply(lambda x:ReplaceWithTroveQuantumNumbers(x), axis=1, result_type="expand")
+    EnergyLevelsDataFrame = EnergyLevelsDataFrame.parallel_apply(lambda x:ReplaceWithQuantumNumbersFromTag(x), axis=1, result_type="expand")
     EnergyLevelsObject.SetEnergyLevelsDataFrame(EnergyLevelsDataFrame)
+    return EnergyLevelsObject
+
+def FindTroveAssignments(EnergyLevelsObject, VibrationalTagMap):
+    EnergyLevelsDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
+    EnergyLevelsDataFrame = EnergyLevelsDataFrame.sort_values(by=["J", "Ka", "Energy"])
+    MarvelVibrationalAssignments = VibrationalTagMap.keys()
+    TroveVibrationalAssignments = VibrationalTagMap.items()
+    CountOfTroveAssignments = Counter(TroveVibrationalAssignments)
+    TroveAssignmentDuplicatesWithCount = {TroveAssignment: count for TroveAssignment, count in CountOfTroveAssignments.items() if count > 1}
+    NewEnergyLevelsDataFrame = []
+    for MarvelVibrationalAssignment in MarvelVibrationalAssignments:
+        ReducedEnergyLevelsDataFrame = EnergyLevelsDataFrame[EnergyLevelsDataFrame["VibrationalTag"] == VibrationalTagMap[MarvelVibrationalAssignment]]
+        if VibrationalTagMap[MarvelVibrationalAssignment] in TroveAssignmentDuplicatesWithCount.keys():
+            ListOfStates = ReducedEnergyLevelsDataFrame["RoVibrationalTag"].unique()
+            StatesBelongingToSpecifiedMarvelAssignment = []
+            for State in ListOfStates:
+                EnergyLevelsAssignedToTroveState = ReducedEnergyLevelsDataFrame[ReducedEnergyLevelsDataFrame["RoVibrationalTag"] == State]
+                StatesBelongingToSpecifiedMarvelAssignment += [EnergyLevelsAssignedToTroveState.iloc[len(EnergyLevelsAssignedToTroveState) - TroveAssignmentDuplicatesWithCount[VibrationalTagMap[MarvelVibrationalAssignment]]]]
+                TroveAssignmentDuplicatesWithCount[VibrationalTagMap[MarvelVibrationalAssignment]] -= 1
+            ReducedEnergyLevelsDataFrame = pd.DataFrame(StatesBelongingToSpecifiedMarvelAssignment)
+        ReducedEnergyLevelsDataFrame = ReducedEnergyLevelsDataFrame.drop(["VibrationalTag"], axis=1)
+        ReducedEnergyLevelsDataFrame["VibrationalTag"] = MarvelVibrationalAssignment
+        NewEnergyLevelsDataFrame += [ReducedEnergyLevelsDataFrame]
+    NewEnergyLevelsDataFrame = pd.concat(NewEnergyLevelsDataFrame)
+    EnergyLevelsObject.SetEnergyLevelsDataFrame(NewEnergyLevelsDataFrame)
     return EnergyLevelsObject

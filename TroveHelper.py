@@ -13,6 +13,7 @@ if __name__ == "__main__":
         OutputFileName = TroveEnergiesFile.split(".")[0] + ".results"
         RefinementFileName = TroveEnergiesFile.split(".")[0] + ".refine"
         GainMarvelFileName = TroveEnergiesFile.split(".")[0] + ".gain"
+        TroveEnergyLevelsFileName = TroveEnergiesFile.split(".")[0] + ".levels"
         MarvelEnergyLevelsObject = ReadMarvelEnergies(MarvelEnergiesFile)
         TroveEnergyLevelsObject = ReadTroveEnergies(TroveEnergiesFile)
         TroveEnergyLevelsObject = ObtainSymmetryMap(TroveEnergyLevelsObject)
@@ -20,14 +21,17 @@ if __name__ == "__main__":
         TroveEnergyLevelsObject = GenerateRoVibrationalTags(TroveEnergyLevelsObject)
         MarvelEnergyLevelsObject = SortEnergyLevelsByJSymmetryAndEnergy(MarvelEnergyLevelsObject)
         MarvelEnergyLevelsObject = GenerateRoVibrationalTags(MarvelEnergyLevelsObject)
-        MarvelEnergyLevelsObject = ApplyFindMatchingLevels(MarvelEnergyLevelsObject, TroveEnergyLevelsObject)
+        (MarvelEnergyLevelsObject, VibrationalTagMap) = ApplyFindMatchingLevels(MarvelEnergyLevelsObject, TroveEnergyLevelsObject)
         MarvelEnergyLevelsObject = ObtainObsMinusCalc(MarvelEnergyLevelsObject)
         MarvelEnergyLevelsObject = RaiseWeights(MarvelEnergyLevelsObject)
         WriteToFile(MarvelEnergyLevelsObject, OutputFileName)
-        MarvelEnergyLevelsObject = ApplyReplaceWithTroveQuantumNumbers(MarvelEnergyLevelsObject)
+        MarvelEnergyLevelsObject = ApplyReplaceWithQuantumNumbersFromTag(MarvelEnergyLevelsObject)
         RefinementEnergyLevelsObject = ConvertToTroveRefinementInput(copy.deepcopy(MarvelEnergyLevelsObject))
         RefinementEnergyLevelsObject.SetObsMinusCalc(None)
         WriteToFile(RefinementEnergyLevelsObject, RefinementFileName)
         GainMarvelEnergyLevelsObject = ConvertToMarvelStatesFormat(copy.deepcopy(MarvelEnergyLevelsObject))
         GainMarvelEnergyLevelsObject.SetObsMinusCalc(None)
         WriteToFile(GainMarvelEnergyLevelsObject, GainMarvelFileName)
+        TroveEnergyLevelsObject = FindTroveAssignments(TroveEnergyLevelsObject, VibrationalTagMap)
+        TroveEnergyLevelsObject = ApplyReplaceWithQuantumNumbersFromTag(TroveEnergyLevelsObject)
+        WriteToFile(TroveEnergyLevelsObject, TroveEnergyLevelsFileName)
