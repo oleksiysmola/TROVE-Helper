@@ -252,7 +252,7 @@ def FindTroveAssignments(EnergyLevelsObject, VibrationalTagMap):
     EnergyLevelsDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
     EnergyLevelsDataFrame = EnergyLevelsDataFrame.sort_values(by=["J", "Ka", "Energy"])
     MarvelVibrationalAssignments = VibrationalTagMap.keys()
-    TroveVibrationalAssignments = VibrationalTagMap.items()
+    TroveVibrationalAssignments = VibrationalTagMap.values()
     CountOfTroveAssignments = Counter(TroveVibrationalAssignments)
     TroveAssignmentDuplicatesWithCount = {TroveAssignment: count for TroveAssignment, count in CountOfTroveAssignments.items() if count > 1}
     NewEnergyLevelsDataFrame = []
@@ -264,7 +264,7 @@ def FindTroveAssignments(EnergyLevelsObject, VibrationalTagMap):
             for State in ListOfStates:
                 EnergyLevelsAssignedToTroveState = ReducedEnergyLevelsDataFrame[ReducedEnergyLevelsDataFrame["RoVibrationalTag"] == State]
                 StatesBelongingToSpecifiedMarvelAssignment += [EnergyLevelsAssignedToTroveState.iloc[len(EnergyLevelsAssignedToTroveState) - TroveAssignmentDuplicatesWithCount[VibrationalTagMap[MarvelVibrationalAssignment]]]]
-                TroveAssignmentDuplicatesWithCount[VibrationalTagMap[MarvelVibrationalAssignment]] -= 1
+            TroveAssignmentDuplicatesWithCount[VibrationalTagMap[MarvelVibrationalAssignment]] -= 1
             ReducedEnergyLevelsDataFrame = pd.DataFrame(StatesBelongingToSpecifiedMarvelAssignment)
         ReducedEnergyLevelsDataFrame = ReducedEnergyLevelsDataFrame.drop(["VibrationalTag"], axis=1)
         ReducedEnergyLevelsDataFrame["VibrationalTag"] = MarvelVibrationalAssignment
