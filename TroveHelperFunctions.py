@@ -272,3 +272,9 @@ def FindTroveAssignments(EnergyLevelsObject, VibrationalTagMap):
     NewEnergyLevelsDataFrame = pd.concat(NewEnergyLevelsDataFrame)
     EnergyLevelsObject.SetEnergyLevelsDataFrame(NewEnergyLevelsDataFrame)
     return EnergyLevelsObject
+
+def DropQuantumNumberTagColumns(EnergyLevelsObject):
+    EnergyLevelsDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
+    EnergyLevelsDataFrame.drop(["VibrationalTag", "RoVibrationalTag"], axis=1)
+    EnergyLevelsObject.SetEnergyLevelsDataFrame(EnergyLevelsDataFrame)
+    return EnergyLevelsObject
