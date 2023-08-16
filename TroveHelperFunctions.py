@@ -202,16 +202,22 @@ def ConvertToTroveRefinementInput(EnergyLevelsObject):
 def WriteToFile(EnergyLevelsObject, FileName, OutlierThreshold=5):
     EnergyLevelsDataFrame = EnergyLevelsObject.GetEnergyLevelsDataFrame()
     if "Obs-Calc" in EnergyLevelsDataFrame.columns:
-        EnergyLevelsOutlierDataFame = EnergyLevelsDataFrame[abs(EnergyLevelsDataFrame["Obs-Calc"]) > OutlierThreshold]
-        EnergyLevelsOutlierDataFameToString = EnergyLevelsOutlierDataFame.to_string(index=False, header=False)
+        EnergyLevelsOutlierDataFrame = EnergyLevelsDataFrame[abs(EnergyLevelsDataFrame["Obs-Calc"]) > OutlierThreshold]
+        EnergyLevelsDataFrame = EnergyLevelsDataFrame[abs(EnergyLevelsDataFrame["Obs-Calc"]) < OutlierThreshold]
+        EnergyLevelsOutlierDataFameToString = EnergyLevelsOutlierDataFrame.to_string(index=False, header=False)
     EnergyLevelObsMinusCalc = EnergyLevelsObject.GetObsMinusCalc()
     with open(FileName, "w+") as EnergyLevelsFile:
         try: 
             VibrationalBands = EnergyLevelsDataFrame["VibrationalTag"].unique()
+            FirstBand = True
             for VibrationalBand in VibrationalBands:
                 EnergyLevelsInVibrationalBand = EnergyLevelsDataFrame[EnergyLevelsDataFrame["VibrationalTag"] == VibrationalBand]
                 EnergyLevelsInVibrationalBand = EnergyLevelsInVibrationalBand.sort_values(by=["J", "Ka", "Energy"])
-                EnergyLevelsDataFrameToString =  EnergyLevelsInVibrationalBand.to_string(index=False)
+                if FirstBand:
+                    EnergyLevelsDataFrameToString =  EnergyLevelsInVibrationalBand.to_string(index=False)
+                    FirstBand = False
+                else:
+                    EnergyLevelsDataFrameToString =  EnergyLevelsInVibrationalBand.to_string(index=False, header=False)
                 EnergyLevelsFile.write(EnergyLevelsDataFrameToString)
                 EnergyLevelsFile.write("\n")
         except:

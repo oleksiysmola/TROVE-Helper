@@ -22,6 +22,11 @@ if __name__ == "__main__":
         MarvelEnergyLevelsObject = SortEnergyLevelsByJSymmetryAndEnergy(MarvelEnergyLevelsObject)
         MarvelEnergyLevelsObject = GenerateRoVibrationalTags(MarvelEnergyLevelsObject)
         (MarvelEnergyLevelsObject, VibrationalTagMap) = ApplyFindMatchingLevels(MarvelEnergyLevelsObject, TroveEnergyLevelsObject)
+        
+        # Find nearest lvls ignoring tags just using symmetry
+        # MarvelEnergyLevelsObject = ApplyFindMatchingLevels(MarvelEnergyLevelsObject, TroveEnergyLevelsObject)
+        # MarvelEnergyLevelsObject = GenerateRoVibrationalTags(MarvelEnergyLevelsObject)
+        #
         MarvelEnergyLevelsObject = ObtainObsMinusCalc(MarvelEnergyLevelsObject)
         MarvelEnergyLevelsObject = RaiseWeights(MarvelEnergyLevelsObject)
         WriteToFile(MarvelEnergyLevelsObject, OutputFileName)
