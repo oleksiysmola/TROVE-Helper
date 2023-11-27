@@ -10,10 +10,11 @@ if __name__ == "__main__":
     else:
         MarvelEnergiesFile = sys.argv[1]
         TroveEnergiesFile = sys.argv[2]
-        OutputFileName = TroveEnergiesFile.split(".")[0] + ".results"
-        RefinementFileName = TroveEnergiesFile.split(".")[0] + ".refine"
-        GainMarvelFileName = TroveEnergiesFile.split(".")[0] + ".gain"
-        TroveEnergyLevelsFileName = TroveEnergiesFile.split(".")[0] + ".levels"
+        TroveEnergiesFile = TroveEnergiesFile.replace(".energies", "")
+        OutputFileName = TroveEnergiesFile + ".results"
+        RefinementFileName = TroveEnergiesFile + ".refine"
+        GainMarvelFileName = TroveEnergiesFile + ".gain"
+        TroveEnergyLevelsFileName = TroveEnergiesFile + ".levels"
         MarvelEnergyLevelsObject = ReadMarvelEnergies(MarvelEnergiesFile)
         TroveEnergyLevelsObject = ReadTroveEnergies(TroveEnergiesFile)
         TroveEnergyLevelsObject = ObtainSymmetryMap(TroveEnergyLevelsObject)
